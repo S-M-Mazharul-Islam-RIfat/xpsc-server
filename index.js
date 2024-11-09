@@ -9,7 +9,10 @@ require('dotenv').config();
 
 // middleware
 app.use(cors({
-   origin: ['http://localhost:5173'],
+   origin: [
+      'http://localhost:5173',
+      'https://xpsc-86074.web.app/'
+   ],
    credentials: true
 }));
 app.use(express.json());
@@ -30,25 +33,35 @@ const client = new MongoClient(uri, {
 async function run() {
    try {
       // Connect the client to the server	(optional starting in v4.7)
-      await client.connect();
+      // await client.connect();
 
       const clubUserCollection = client.db("xpscDB").collection("clubUsers");
       const allUserCollection = client.db("xpscDB").collection("allUsers");
       const codeforcesContestListCollection = client.db("xpscDB").collection("codeforcesContestList");
       const codeforcesContestResultsCollection = client.db("xpscDB").collection("codeforcesContestResults");
 
+      const cookieOptions = {
+         httpOnly: true,
+         secure: process.env.NODE_ENV === "production",
+         sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+      };
 
       // auth related api
       app.post('/jwt', async (req, res) => {
          const user = req.body;
          const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
          res
-            .cookie('token', token, {
-               httpOnly: true,
-               secure: false,
-            })
+            .cookie('token', token, cookieOptions)
             .send({ success: true });
       })
+
+      app.post("/logout", async (req, res) => {
+         const user = req.body;
+         console.log("logging out", user);
+         res
+            .clearCookie("token", { ...cookieOptions, maxAge: 0 })
+            .send({ success: true });
+      });
 
 
       // middlewares
@@ -345,7 +358,7 @@ async function run() {
 
 
       // Send a ping to confirm a successful connection
-      await client.db("admin").command({ ping: 1 });
+      // await client.db("admin").command({ ping: 1 });
       console.log("Pinged your deployment. You successfully connected to MongoDB!");
    } finally {
       // Ensures that the client will close when you finish/error
