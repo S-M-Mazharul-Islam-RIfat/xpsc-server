@@ -2,21 +2,13 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
-const cookieParser = require('cookie-parser');
 const port = process.env.port || 5000;
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 
 // middleware
-app.use(cors({
-   origin: [
-      'http://localhost:5173',
-      'https://xpsc-86074.web.app/'
-   ],
-   credentials: true
-}));
+app.use(cors());
 app.use(express.json());
-app.use(cookieParser());
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.zahfpvj.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -40,39 +32,24 @@ async function run() {
       const codeforcesContestListCollection = client.db("xpscDB").collection("codeforcesContestList");
       const codeforcesContestResultsCollection = client.db("xpscDB").collection("codeforcesContestResults");
 
-      const cookieOptions = {
-         httpOnly: true,
-         secure: process.env.NODE_ENV === "production",
-         sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
-      };
 
       // auth related api
       app.post('/jwt', async (req, res) => {
          const user = req.body;
          const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
-         res
-            .cookie('token', token, cookieOptions)
-            .send({ success: true });
+         res.send({ token });
       })
-
-      app.post("/logout", async (req, res) => {
-         const user = req.body;
-         console.log("logging out", user);
-         res
-            .clearCookie("token", { ...cookieOptions, maxAge: 0 })
-            .send({ success: true });
-      });
 
 
       // middlewares
       const verifyToken = (req, res, next) => {
-         if (!req.cookies.token) {
-            return res.status(401).send({ message: 'unauthorized access' })
+         if (!req.headers.authorization) {
+            return res.status(401).send({ message: 'unauthorized access' });
          }
-         const token = req.cookies.token;
+         const token = req.headers.authorization.split(' ')[1];
          jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
             if (err) {
-               return res.status(401).send({ message: 'unauthorized access' })
+               return res.status(401).send({ message: 'unauthorized access' });
             }
             req.decoded = decoded;
             next();
