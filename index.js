@@ -7,7 +7,15 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 
 // middleware
-app.use(cors());
+app.use(
+   cors({
+      origin: [
+         "http://localhost:5173",
+         "https://xpsc-86074.web.app",
+         "https://xpsc-86074.firebaseapp.com"
+      ]
+   })
+);
 app.use(express.json());
 
 
@@ -74,11 +82,8 @@ async function run() {
          res.send(result);
       })
 
-      app.get('/allUsers/admin/:email', verifyToken, async (req, res) => {
+      app.get('/allUsers/admin/:email', async (req, res) => {
          const email = req.params.email;
-         if (email !== req.decoded.email) {
-            return res.status(403).send({ message: 'forbidden access' });
-         }
          const query = { email: email };
          const user = await allUserCollection.findOne(query);
          let admin = false;
