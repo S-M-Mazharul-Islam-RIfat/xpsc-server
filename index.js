@@ -177,7 +177,7 @@ async function run() {
 
 
       // leaderboard related api
-      app.get('/leaderboard', verifyToken, async (req, res) => {
+      app.get('/leaderboard', async (req, res) => {
          const page = parseInt(req.query.page);
          const size = parseInt(req.query.size);
          const result = await clubUserCollection
