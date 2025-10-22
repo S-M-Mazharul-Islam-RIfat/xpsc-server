@@ -1,0 +1,30 @@
+version: "3.9"
+
+services:
+  mongo-db:
+    image: mongo:7
+    container_name: mongo-db
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${DB_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${DB_PASS}
+      MONGO_INITDB_DATABASE: ${DB}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  xpsc-server:
+    build: .
+    container_name: xpsc-server
+    ports:
+      - "${PORT}:${PORT}"
+    environment:
+      MONGO_URI: mongodb://${DB_USER}:${DB_PASS}@mongo-db:27017/${DB}
+      PORT: ${PORT}
+      NODE_ENV: production
+    depends_on:
+      - mongo-db
+
+volumes:
+  mongo-data:
