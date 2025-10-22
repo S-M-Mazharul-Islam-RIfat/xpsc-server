@@ -32,7 +32,7 @@ const client = new MongoClient(uri, {
 
 async function run() {
    try {
-      // Connect the client to the server	(optional starting in v4.7)
+      // connect the client to the server	(optional starting in v4.7)
       // await client.connect();
 
       const clubUserCollection = client.db("xpscDB").collection("clubUsers");
